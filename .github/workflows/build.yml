@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Cache xmake
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.xmake
+            build
+          key: xmake-${{ runner.os }}-${{ hashFiles('xmake.lua') }}
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26b
+
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Clone NiseAPI
+        run: |
+          git clone https://github.com/Lodingglue/nise-api.git api
+
+      - name: Configure & Build
+        run: |
+          xmake f -y -p android \
+            -a arm64-v8a \
+            --ndk=$ANDROID_NDK_HOME \
+            --ndk_sdkver=24 \
+            -m release
+          xmake -y -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libEPPL
+          path: build/android/arm64-v8a/release/libEPPL.so
