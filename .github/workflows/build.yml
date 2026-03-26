@@ -37,7 +37,9 @@ jobs:
       - name: Configure & Build
         run: |
           xmake clean
-          xmake f -y -p android \
+          xmake remove miniapi
+          xmake require --force miniapi
+          xmake f -c -y -p android \
             -a arm64-v8a \
             --ndk=$ANDROID_NDK_HOME \
             --ndk_sdkver=24 \
